@@ -2,9 +2,12 @@ import sounddevice as sd
 import soundfile as sf
 
 # Paramètres de l'enregistrement
-filename = "enregistrement.wav"
-samplerate = 44100  # Fréquence d'échantillonnage
-duration = 5  # Durée en secondes
+filename = input("Entrez le nom du fichier (sans extension ou avec) : ")
+if not filename.lower().endswith(".wav"):
+    filename += ".wav"
+
+samplerate = 44100 # Fréquence d'échantillonnage
+duration = 2  # Durée en secondes
 channels = 1  # Nombre de canaux (1 pour mono, 2 pour stéréo)
 
 print("Enregistrement en cours...")
