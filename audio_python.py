@@ -11,7 +11,7 @@ duration = 2  # Durée en secondes
 channels = 1  # Nombre de canaux (1 pour mono, 2 pour stéréo)
 
 print("Enregistrement en cours...")
-# Enregistrement audio dans un tableau numpy
+# Enregistrement audio
 audio_data = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=channels, dtype='float32')
 sd.wait()  # Attendre la fin de l'enregistrement
 
