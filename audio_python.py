@@ -2,7 +2,7 @@ import sounddevice as sd
 import soundfile as sf
 
 # Paramètres de l'enregistrement
-filename = input("Entrez le nom du fichier (sans extension ou avec) : ")
+filename = input("Entrez le nom du fichier : ")
 if not filename.lower().endswith(".wav"):
     filename += ".wav"
 
