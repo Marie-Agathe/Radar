@@ -7,7 +7,7 @@ def enregistrer():
     # Récupérer le nom du fichier depuis l'input
     filename = entry_filename.get()
 
-    # Ajouter l'extension .wav si elle n'est pas présente
+    # Ajouter l'extension .wav si besoin
     if not filename.lower().endswith(".wav"):
         filename += ".wav"
 
@@ -18,7 +18,7 @@ def enregistrer():
     try:
         duration = int(entry_duration.get())  # Convertir la durée en entier
     except ValueError:
-        messagebox.showerror("Erreur", "Veuillez entrer une durée valide en secondes.")
+        messagebox.showerror("Erreur", "Entrez une durée valide en secondes.")
         return
 
     # Paramètres de l'enregistrement
@@ -34,13 +34,13 @@ def enregistrer():
         sf.write(filename, audio_data, samplerate)
         print(f"Enregistrement terminé. Fichier sauvegardé sous '{filename}'.")
 
-        # Afficher un message de succès
+        # Message de succès
         messagebox.showinfo("Succès", f"Enregistrement terminé et sauvegardé sous '{filename}'")
         # Fermer la fenêtre Tkinter après l'enregistrement
         root.quit()
         root.destroy()
     except Exception as e:
-        # Afficher un message d'erreur si quelque chose échoue
+        # Message d'erreur si quelque chose échoue
         messagebox.showerror("Erreur", f"Une erreur est survenue : {e}")
         root.quit()
         root.destroy()
@@ -64,7 +64,7 @@ label_channels.pack(pady=10)
 var_channels = tk.IntVar()
 var_channels.set(1)  # Valeur par défaut (mono)
 
-# Créer les boutons radio pour 1 ou 2 canaux
+# Créer les boutons pour les canaux
 radio_button_1 = tk.Radiobutton(root, text="1 Canal (Mono)", variable=var_channels, value=1)
 radio_button_1.pack(pady=5)
 
@@ -83,5 +83,5 @@ entry_duration.insert(0, "5")  # Valeur par défaut (5 secondes)
 button_enregistrer = tk.Button(root, text="Lancer l'enregistrement", command=enregistrer)
 button_enregistrer.pack(pady=20)
 
-# Lancer l'interface graphique
+# Lancer l'interface
 root.mainloop()
