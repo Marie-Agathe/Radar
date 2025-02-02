@@ -37,6 +37,7 @@ tpc = 0
 N_pixel_vertical = 101
 Vmin = -80
 Vmax = 0
+vitesseMax = 40
 class MyWindow(tk.Tk): 
     
     def __init__(self):
@@ -248,7 +249,7 @@ class MyWindow(tk.Tk):
         self.label = tk.Label(self, text="Data : ", bg="white")
         self.label.place(x=20, y=500)
 
-        #-----------Creation d'un entry qui permet de modifier zpad----------------
+        #-----------Creation d'un entry qui permet d(e modifier zpad----------------
         self.value_zpad = tk.IntVar()
         self.value_zpad.set(100)  # Valeur par défaut de zpad
         self.texte_zpad1 = tk.Label(self, text="zpad :                                               \n *N (nb échantillon par impulsion)", bg="white")
@@ -298,12 +299,19 @@ class MyWindow(tk.Tk):
         self.value_min.set(Vmin)
         self.value_max = tk.IntVar()
         self.value_max.set(Vmax) 
-        self.texte_echelle = tk.Label(self, text="Echelle : Vmin =                Vmax = ", bg="white")
+        self.texte_echelle = tk.Label(self, text="Echelle Magnitude (dB) : Vmin =                Vmax = ", bg="white")
         self.texte_echelle.place(x=260, y=540)
-        self.entry_vmin = tk.Spinbox(self, from_=-80, to=20,increment=1, width=4, textvariable=self.value_min)
-        self.entry_vmin.place(x=350, y=542)
-        self.entry_vmax = tk.Spinbox(self, from_=-80, to=20,increment=1, width=4, textvariable=self.value_max)
-        self.entry_vmax.place(x=440, y=542)
+        self.entry_vmin = tk.Spinbox(self, from_=-200, to=20,increment=1, width=4, textvariable=self.value_min)
+        self.entry_vmin.place(x=440, y=542)
+        self.entry_vmax = tk.Spinbox(self, from_=-200, to=20,increment=1, width=4, textvariable=self.value_max)
+        self.entry_vmax.place(x=530, y=542)
+
+        self.value_vitesseMax = tk.IntVar()
+        self.value_vitesseMax.set(vitesseMax)
+        self.texte_echelle = tk.Label(self, text="Echelle Vitesse (m/s) : Vmax = ", bg="white")
+        self.texte_echelle.place(x=260, y=(570))
+        self.entry_vitesseMax = tk.Spinbox(self, from_=1, to=10000,increment=10, width=4, textvariable=self.value_vitesseMax)
+        self.entry_vitesseMax.place(x=425, y=570)
 
         
         #-----------Creation de la listbox images spectrogrammes----------------
@@ -563,7 +571,7 @@ class MyWindow(tk.Tk):
         width_with_margin = canvas_width - 2 * margin
         height_with_margin = canvas_height - 2 * margin
         
-        image = image.resize((width_with_margin, height_with_margin), Image.ANTIALIAS)
+        image = image.resize((width_with_margin, height_with_margin), Image.Resampling.LANCZOS)
         img = ImageTk.PhotoImage(image=image)
         x_pos = margin
         y_pos = margin
@@ -588,7 +596,10 @@ class MyWindow(tk.Tk):
         if(mode==0):
             img = Image.open(os.path.join(img_spectre_dir, 'spectre_doppler.png'))
         else:
-            img = Image.open(os.path.join(img_spectre_dir, 'spectre_synchro.png'))
+            if tpc==0 :
+                img = Image.open(os.path.join(img_spectre_dir, 'spectre_synchro.png'))
+            else :
+                img = Image.open(os.path.join(img_spectre_dir, 'spectre_synchro_tpc.png'))
         img.save(save_path, format="PNG")
         self.entry_specname.delete(0,'end')
 
@@ -639,14 +650,17 @@ class MyWindow(tk.Tk):
             print(f"Couleur choisie : {cmap}")
 
     def set_tpc_to_0_and_run(self):
-        global tpc, zpad_doppler, zpad_synchro, tp_doppler, tp_synchro, mode
+        global tpc, zpad_doppler, zpad_synchro, tp_doppler, tp_synchro, mode, vitesseMax, Vmin, Vmax
         tpc = 0
         print("tpc = 0")
+        Vmin = self.value_min.get()
+        Vmax = self.value_max.get()
         if mode==0:
             zpad_doppler = self.value_zpad.get()
-            print(zpad_doppler)
+            #print(zpad_doppler)
             tp_doppler = self.value_Tp.get()
-            print(tp_doppler)
+            #print(tp_doppler)
+            vitesseMax = self.value_vitesseMax.get()
         else :
             zpad_synchro = self.value_zpad.get()
             print(zpad_synchro)
@@ -655,13 +669,14 @@ class MyWindow(tk.Tk):
         self.run_spectrogram_thread()
 
     def set_tpc_to_1_and_run(self):
-        global tpc, N_pixel_vertical, zpad_doppler, zpad_synchro, tp_doppler, tp_synchro, mode, Vmin, Vmax
+        global tpc, N_pixel_vertical, zpad_doppler, zpad_synchro, tp_doppler, tp_synchro, mode, Vmin, Vmax, vitesseMax
         N_pixel_vertical = self.value_ligne.get()
         print(N_pixel_vertical)
         tpc = 1
         print("tpc = 1")
         Vmin = self.value_min.get()
         Vmax = self.value_max.get()
+        #vitesseMax = self.value_vitesseMax.get()
         print(Vmin)
         print(Vmax)
         if mode==1:
@@ -712,7 +727,7 @@ class MyWindow(tk.Tk):
         width_with_margin = canvas_width - 2 * margin
         height_with_margin = canvas_height - 2 * margin
         
-        image = image.resize((width_with_margin, height_with_margin), Image.ANTIALIAS)
+        image = image.resize((width_with_margin, height_with_margin), Image.Resampling.LANCZOS)
         img = ImageTk.PhotoImage(image=image)
         x_pos = margin
         y_pos = margin
@@ -841,15 +856,20 @@ def spectrogramme_doppler(audio,callback, queue_manager):
         # Calcul de la vitesse et du temps
         delta_f = np.linspace(0, fs / 2, v.shape[1])  # Fréquence en Hz
         lambda_ = c / fc
-        velocity = delta_f * lambda_ / 2
+        velocity = delta_f * lambda_ #/ 2
         time = np.linspace(0, Tp * num_pulses, num_pulses)  # Temps en secondes
-
+        print("lambda  ", end="")
+        print(lambda_)
+        print("delta_f  ", end="")
+        print(delta_f[-1])
+        print("velocity   ", end="")
+        print(velocity[-1])
         # Génération du spectrogramme
         queue_manager.put(("progress", "Génération du spectrogramme"))
         plt.figure(figsize=(10, 6))
         plt.imshow(v_db, aspect='auto', extent=[velocity[0], velocity[-1], time[-1], time[0]], vmin=vmin, vmax=vmax, cmap=cmap)
         plt.colorbar(label='Magnitude (dB)')
-        plt.xlim([0, 40])
+        plt.xlim([0, vitesseMax])
         plt.xlabel('Vitesse (m/sec)')
         plt.ylabel('Temps (sec)')
         plt.title('Doppler vs. Temps')
@@ -940,7 +960,7 @@ def spectrogramme_synchro(audio, callback, queue_manager):
         queue_manager.put(("progress", "Génération du spectrogramme"))
         plt.figure(figsize=(10, 6))
         print("1")
-        plt.imshow(S - m, aspect='auto', extent=[0, max_range, time[-1], time[0]], vmin=-80, vmax=0, cmap=cmap)
+        plt.imshow(S - m, aspect='auto', extent=[0, max_range, time[-1], time[0]], vmin=Vmin, vmax=Vmax, cmap=cmap)
         print("2")
         plt.colorbar()
         plt.ylabel('Temps (s)')
